@@ -1,5 +1,19 @@
 package api
 
+func jsonAccountState(jsonString string) AccountState {
+	var state string
+	json.Unmarshal(jsonString, &state)
+
+	switch state {
+	case "active":
+		return AccountActive
+	case "inactive":
+		return AccountInactive
+	case "closed":
+		return AccountClosed
+	}
+}
+
 func (state AccountState) json() string {
 	switch state {
 	case AccountActive:
@@ -9,6 +23,9 @@ func (state AccountState) json() string {
 	case AccountClosed:
 		return "closed"
 	}
+}
+
+func jsonUser() User {
 }
 
 func (user *User) json() string {

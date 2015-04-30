@@ -8,9 +8,7 @@ import (
 )
 
 func createUser(writer http.ResponseWriter, request *http.Request) {
-	user := system.GetSystem().CreateUser()
-
-	writer.Write(json.Dump(user))
+	writer.Write(system.GetSystem().CreateUser().json())
 }
 
 func setupRoutes() {

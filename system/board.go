@@ -5,29 +5,29 @@ import (
 )
 
 type Card struct {
-	id       int
-	cardType string
-	stage    string
-	data     string
+	Id       int
+	CardType string
+	Stage    string
+	Data     string
 }
 
 type CardTransition struct {
-	cardId    int
-	movedBy   int
-	movedwhen time.Time
+	CardId    int
+	MovedBy   int
+	MovedWhen time.Time
 }
 
 type Column struct {
-	title    string
-	wipLimit int
+	Title    string
+	WipLimit int
 }
 
 type Board struct {
-	id          int
-	title       string
-	columns     []Column
-	cards       map[int]Card
-	ownedBy     int
-	createdBy   int
-	createdWhen time.Time
+	Id          int
+	Title       string
+	Columns     []Column
+	Cards       map[int]Card
+	OwnedBy     int
+	CreatedBy   int
+	CreatedWhen time.Time
 }

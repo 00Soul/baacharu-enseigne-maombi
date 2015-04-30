@@ -23,15 +23,15 @@ func (state AccountState) String() string {
 }
 
 type User struct {
-	id          int
-	state       AccountState
-	createdWhen time.Time
+	Id          int
+	State       AccountState
+	CreatedWhen time.Time
 }
 
 type Profile struct {
-	email    string
-	username string
-	alias    string
+	Email    string
+	Username string
+	Alias    string
 }
 
 func CreateUser() *User {
@@ -45,7 +45,7 @@ func (user *User) CreateBoard(title string) *Board {
 func (user *User) GetBoards() []*Board {
 	boardList := make([]*Board, 0, 5)
 	for _, board := range getSystem().boards {
-		if board.ownedBy == user.id {
+		if board.OwnedBy == user.Id {
 			boardList = append(boardList, board)
 		}
 	}

@@ -21,7 +21,7 @@ func NewSystem() *System {
 
 var cachedSystem *System = nil
 
-func getSystem() *System {
+func GetSystem() *System {
 	if cachedSystem == nil {
 		cachedSystem = NewSystem()
 	}
