@@ -25,7 +25,7 @@ func createUser(writer http.ResponseWriter, request *http.Request) {
 	user := NewUser()
 
 	context := GetServiceContext()
-	url, err := context.router.Get("user").URL("user-id", strconv.Itoa(user.Id))
+	url, _ := context.router.Get("user").URL("user-id", strconv.Itoa(user.Id))
 
 	header := writer.Header()
 	header.Set("Content-Type", "application/json")
@@ -43,10 +43,10 @@ func setupRoutes() {
 	usersRouter := apiRouter.Path("/users").Name("users").Subrouter()
 	usersRouter.Methods("POST").HandlerFunc(createUser)
 
-	userRouter := usersRouter.Path("/{user-id}").Subrouter()
+	//userRouter := usersRouter.Path("/{user-id}").Subrouter()
 
-	boardsRouter := userRouter.Path("/boards").Subrouter()
-	boardRouter := boardsRouter.Path("/{board-id}").Subrouter()
+	//boardsRouter := userRouter.Path("/boards").Subrouter()
+	//boardRouter := boardsRouter.Path("/{board-id}").Subrouter()
 
 	http.ListenAndServe(":8088", context.router)
 }

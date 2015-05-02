@@ -9,28 +9,36 @@ import (
 const timeLayout string = "2006-01-02T15:04:05-07:00"
 
 func jsonAccountState(jsonString string) AccountState {
-	var state string
-	json.Unmarshal([]byte(jsonString), &state)
+	var stateObject AccountState
+	var stateString string
 
-	switch state {
+	json.Unmarshal([]byte(jsonString), &stateString)
+
+	switch stateString {
 	case "active":
-		return AccountActive
+		stateObject = AccountActive
 	case "inactive":
-		return AccountInactive
+		stateObject = AccountInactive
 	case "closed":
-		return AccountClosed
+		stateObject = AccountClosed
 	}
+
+	return stateObject
 }
 
 func (state AccountState) json() string {
+	var jsonString string
+
 	switch state {
 	case AccountActive:
-		return "active"
+		jsonString = "active"
 	case AccountInactive:
-		return "inactive"
+		jsonString = "inactive"
 	case AccountClosed:
-		return "closed"
+		jsonString = "closed"
 	}
+
+	return jsonString
 }
 
 func jsonUser(jsonString string) User {
