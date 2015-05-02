@@ -35,7 +35,7 @@ func createUser(writer http.ResponseWriter, request *http.Request) {
 	fmt.Fprintf(writer, "%s", user.json())
 }
 
-func setupRoutes() {
+func SetupRoutes() {
 	context := GetServiceContext()
 
 	apiRouter := context.router.PathPrefix("/api").Subrouter()
