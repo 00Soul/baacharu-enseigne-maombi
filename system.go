@@ -1,4 +1,4 @@
-package system
+package oxpit
 
 import (
 	"time"
@@ -31,14 +31,14 @@ func GetSystem() *System {
 
 func (system *System) createUser() *User {
 	user := new(User)
-	user.id = system.counter
-	user.state = AccountActive
-	user.createdWhen = time.Now().UTC()
+	user.Id = system.counter
+	user.State = AccountActive
+	user.CreatedWhen = time.Now().UTC()
 
 	system.counter++
-	system.users[user.id] = &user
+	system.users[user.Id] = user
 
-	return &user
+	return user
 }
 
 func (system *System) GetUsers() []*User {
@@ -51,19 +51,24 @@ func (system *System) GetUsers() []*User {
 	return userList
 }
 
-func (system *System) GetUser(userId int) (User, bool) {
-	return system.users[userId]
+func (system *System) GetUser(userId int) (*User, bool) {
+	var user *User
+	var ok bool
+
+	user, ok = system.users[userId]
+
+	return user, ok
 }
 
 func (system *System) createBoard(user *User, title string) *Board {
 	board := new(Board)
-	board.id = system.counter
-	board.title = title
-	board.columns = make([]Column, 0, 3)
-	board.cards = make(map[int]Card)
-	board.ownedBy = user.id
-	board.createdBy = user.id
-	board.createdWhen = time.Now().UTC()
+	board.Id = system.counter
+	board.Title = title
+	board.Columns = make([]Column, 0, 3)
+	board.Cards = make(map[int]Card)
+	board.OwnedBy = user.Id
+	board.CreatedBy = user.Id
+	board.CreatedWhen = time.Now().UTC()
 
 	system.counter++
 

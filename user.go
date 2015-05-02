@@ -1,4 +1,4 @@
-package system
+package oxpit
 
 import (
 	"time"
@@ -19,7 +19,7 @@ var accountStates = [...]string{
 }
 
 func (state AccountState) String() string {
-	return accountStates[s]
+	return accountStates[state]
 }
 
 type User struct {
@@ -34,17 +34,17 @@ type Profile struct {
 	Alias    string
 }
 
-func CreateUser() *User {
-	return getSystem().createUser()
+func NewUser() *User {
+	return GetSystem().createUser()
 }
 
 func (user *User) CreateBoard(title string) *Board {
-	return getSystem().createBoard(user, title)
+	return GetSystem().createBoard(user, title)
 }
 
 func (user *User) GetBoards() []*Board {
 	boardList := make([]*Board, 0, 5)
-	for _, board := range getSystem().boards {
+	for _, board := range GetSystem().boards {
 		if board.OwnedBy == user.Id {
 			boardList = append(boardList, board)
 		}
