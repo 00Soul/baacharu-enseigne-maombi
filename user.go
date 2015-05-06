@@ -34,16 +34,16 @@ type Profile struct {
 	Alias    string
 }
 
-func NewUser() *User {
+func NewUser() User {
 	return GetSystem().createUser()
 }
 
-func (user *User) CreateBoard(title string) *Board {
+func (user User) CreateBoard(title string) Board {
 	return GetSystem().createBoard(user, title)
 }
 
-func (user *User) GetBoards() []*Board {
-	boardList := make([]*Board, 0, 5)
+func (user User) GetBoards() []Board {
+	boardList := make([]Board, 0, 5)
 	for _, board := range GetSystem().boards {
 		if board.OwnedBy == user.Id {
 			boardList = append(boardList, board)
