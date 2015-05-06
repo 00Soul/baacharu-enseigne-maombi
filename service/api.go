@@ -79,6 +79,10 @@ func getUser(writer http.ResponseWriter, request *http.Request) {
 }
 
 func createProfile(writer http.ResponseWriter, request *http.Request) {
+	vars := mux.Vars(request)
+
+	userId, _ := strconv.Atoi(vars["user-id"])
+	user, found := oxpit.GetSystem().GetUser(userId)
 }
 
 func updateProfile(writer http.ResponseWriter, request *http.Request) {

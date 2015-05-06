@@ -78,3 +78,24 @@ func jsonFromUser(user oxpit.User) string {
 
 	return string(bytes)
 }
+
+func jsonFromProfile(profile oxpit.Profile) string {
+	bytes, _ := json.Marshal(map[string]string{
+		"email":    profile.Email,
+		"username": profile.Username,
+		"alias":    profile.Alias,
+	})
+
+	return string(bytes)
+}
+
+func toProfile(jsonString string) oxpit.Profile {
+	var jsonObject map[string]interface{}
+	json.Unmarshal([]byte(jsonString), &jsonObject)
+
+	return oxpit.Profile{
+		Email:    jsonObject["email"].(string),
+		Username: jsonObject["username"].(string),
+		Alias:    jsonObject["alias"].(string),
+	}
+}
