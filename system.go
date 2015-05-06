@@ -46,6 +46,7 @@ func (system *System) GetUsers() []User {
 	i := 0
 	for _, user := range system.users {
 		userList[i] = user
+		i++
 	}
 
 	return userList

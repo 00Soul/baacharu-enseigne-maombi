@@ -37,21 +37,35 @@ func createUser(writer http.ResponseWriter, request *http.Request) {
 	header := writer.Header()
 	header.Set("Content-Type", "application/json")
 	header.Set("Location", url.String())
-	//header.Set("Location", "http://localhost:8088/try/this")
 
 	writer.WriteHeader(http.StatusCreated)
 	fmt.Fprintf(writer, "%s", jsonFromUser(user))
+}
+
+func listUsers(writer http.ResponseWriter, request *http.Request) {
+	userList := oxpit.GetSystem().GetUsers()
+
+	users := make([]interface{}, 0, 1)
+	for _, u := range userList {
+		users = append(users, interfaceFromUser(u))
+	}
+
+	jsonString, err := json.Marshal(users)
+	if err != nil {
+		jsonString = []byte("{\"error\":\"json.Marshal() failed\"}")
+	}
+
+	header := writer.Header()
+	header.Set("Content-Type", "application/json")
+
+	writer.WriteHeader(http.StatusOK)
+	fmt.Fprintf(writer, "%s", jsonString)
 }
 
 func getUser(writer http.ResponseWriter, request *http.Request) {
 	vars := mux.Vars(request)
 	userId, _ := strconv.Atoi(vars["user-id"])
 	user, found := oxpit.GetSystem().GetUser(userId)
-
-	log.Printf("DEBUG: Found user -")
-	log.Printf("DEBUG:    user.Id: %d", user.Id)
-	log.Printf("DEBUG:    user.State: %d", jsonFromAccountState(user.State))
-	log.Printf("DEBUG:    user.CreatedWhen: %d", user.CreatedWhen.Format(timeLayout))
 
 	if !found {
 		writer.WriteHeader(http.StatusNotFound)
@@ -64,48 +78,77 @@ func getUser(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func getUserList(writer http.ResponseWriter, request *http.Request) {
-	userList := oxpit.GetSystem().GetUsers()
+func createProfile(writer http.ResponseWriter, request *http.Request) {
+}
 
-	log.Printf("DEBUG: length of userList is %d", len(userList))
+func updateProfile(writer http.ResponseWriter, request *http.Request) {
+}
 
-	users := make([]int, len(userList))
-	//users := []int{0, 1, 2, 3}
-	for i, u := range userList {
-		//users = append(users, interfaceFromUser(*u))
-		//log.Printf("DEBUG: user=%s", interfaceFromUser(*u))
-		//uid := strconv.Itoa(u.Id)
-		log.Printf("DEBUG: user.Id=%s", u.Id)
-		//users = append(users, u.Id)
-		users[i] = u.Id
-	}
-	log.Printf("DEBUG: ...outside range loop")
+func getProfile(writer http.ResponseWriter, request *http.Request) {
+}
 
-	jsonString, err := json.Marshal(users)
-	if err != nil {
-		jsonString = []byte("{\"error\":\"json.Marshal() failed\"}")
-	}
-	log.Printf("DEBUG: ...just Marshalled users slice")
-	log.Printf("DEBUG: jsonString=\"%s\"", jsonString)
+func createBoard(writer http.ResponseWriter, request *http.Request) {
+}
 
-	writer.WriteHeader(http.StatusOK)
-	fmt.Fprintf(writer, "%s", jsonString)
+func listBoards(writer http.ResponseWriter, request *http.Request) {
+}
+
+func viewBoard(writer http.ResponseWriter, request *http.Request) {
+}
+
+func modifyBoard(writer http.ResponseWriter, request *http.Request) {
+}
+
+func deleteBoard(writer http.ResponseWriter, request *http.Request) {
+}
+
+func createCard(writer http.ResponseWriter, request *http.Request) {
+}
+
+func listCards(writer http.ResponseWriter, request *http.Request) {
+}
+
+func inspectCard(writer http.ResponseWriter, request *http.Request) {
+}
+
+func modifyCard(writer http.ResponseWriter, request *http.Request) {
+}
+
+func deleteCard(writer http.ResponseWriter, request *http.Request) {
 }
 
 func setupRoutes() {
 	context := GetServiceContext()
 
-	apiRouter := context.router.PathPrefix("/api").Subrouter()
-
-	usersRouter := apiRouter.Path("/users").Name("users").Subrouter()
+	usersRouter := context.router.Path("/api/users").Name("users").Subrouter()
 	usersRouter.Methods("POST").HandlerFunc(createUser)
-	usersRouter.Methods("GET").HandlerFunc(getUserList)
+	usersRouter.Methods("GET").HandlerFunc(listUsers)
 
-	userRouter := usersRouter.Path("/{user-id}").Name("user").Subrouter()
+	userRouter := context.router.Path("/api/users/{user-id}").Name("user").Subrouter()
 	userRouter.Methods("GET").HandlerFunc(getUser)
 
-	//boardsRouter := userRouter.Path("/boards").Subrouter()
-	//boardRouter := boardsRouter.Path("/{board-id}").Subrouter()
+	userProfileRouter := context.router.Path("/api/users/{user-id}/profile").Name("user").Subrouter()
+	userProfileRouter.Methods("POST").HandlerFunc(createProfile)
+	userProfileRouter.Methods("PUT").HandlerFunc(updateProfile)
+	userProfileRouter.Methods("GET").HandlerFunc(getProfile)
+
+	boardsRouter := context.router.Path("/api/users/{user-id}/boards").Subrouter()
+	boardsRouter.Methods("POST").HandlerFunc(createBoard)
+	boardsRouter.Methods("GET").HandlerFunc(listBoards)
+
+	boardRouter := context.router.Path("/api/users/{user-id}/boards/{board-id}").Subrouter()
+	boardRouter.Methods("GET").HandlerFunc(viewBoard)
+	boardRouter.Methods("PUT").HandlerFunc(modifyBoard)
+	boardRouter.Methods("DELETE").HandlerFunc(deleteBoard)
+
+	cardsRouter := context.router.Path("/api/users/{user-id}/boards/{board-id}/cards").Subrouter()
+	cardsRouter.Methods("POST").HandlerFunc(createCard)
+	cardsRouter.Methods("GET").HandlerFunc(listCards)
+
+	cardRouter := context.router.Path("/api/users/{user-id}/boards/{board-id}/cards/{card-id}").Subrouter()
+	cardRouter.Methods("GET").HandlerFunc(inspectCard)
+	cardRouter.Methods("PUT").HandlerFunc(modifyCard)
+	cardRouter.Methods("DELETE").HandlerFunc(deleteCard)
 
 	http.ListenAndServe(":8088", context.router)
 }
