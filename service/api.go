@@ -60,6 +60,18 @@ func listUsers(writer http.ResponseWriter, request *http.Request) {
 
 	writer.WriteHeader(http.StatusOK)
 	fmt.Fprintf(writer, "%s", jsonString)
+
+	mapping := oxpit.json.NewMapping(oxpit.User)
+	mapping.Field("Id").Name("id")
+	mapping.Field("State").Name("state").MarshalFunc(acctState2Json)
+	mapping.Field("State").UnmarshalFunc(func(data []byte) (interface{}, error) {
+		jsonString, ok := data.(string)
+		when, err := time.Parse(timeLayout, jsonString)
+	})
+	mapping.Field("CreatedWhen").Name("created-when")
+	mapping.Field("CreatedWhen").MarshalFunc(toTime)
+	mapping.Field("CreatedWhen").UnmarshalFunc(fromTime)
+	fmt.Fprintf(writer, "%s", oxpit.json.toJson(users))
 }
 
 func getUser(writer http.ResponseWriter, request *http.Request) {
@@ -83,15 +95,99 @@ func createProfile(writer http.ResponseWriter, request *http.Request) {
 
 	userId, _ := strconv.Atoi(vars["user-id"])
 	user, found := oxpit.GetSystem().GetUser(userId)
+
+	if !found {
+		writer.WriteHeader(http.StatusNotFound)
+	} else {
+		bytes := make([]byte, request.ContentLength)
+		_, err := request.Read(bytes)
+		if err == nil {
+			var profile = toProfileFromBytes(bytes)
+
+			user.SetProfile(profile)
+
+			header := writer.Header()
+			header.Set("Content-Type", "application/json")
+
+			writer.WriteHeader(http.StatusOK)
+			fmt.Fprintf(writer, "%s", jsonFromProfile(user.GetProfile()))
+		} else {
+			writer.WriteHeader(http.StatusInternalServerError)
+		}
+	}
 }
 
 func updateProfile(writer http.ResponseWriter, request *http.Request) {
+	vars := mux.Vars(request)
+
+	userId, _ := strconv.Atoi(vars["user-id"])
+	user, found := oxpit.GetSystem().GetUser(userId)
+
+	if !found {
+		writer.WriteHeader(http.StatusNotFound)
+	} else {
+		bytes := make([]byte, request.ContentLength)
+		_, err := request.Read(bytes)
+		if err == nil {
+			var profile = toProfileFromBytes(bytes)
+
+			user.SetProfile(profile)
+
+			header := writer.Header()
+			header.Set("Content-Type", "application/json")
+
+			writer.WriteHeader(http.StatusOK)
+			fmt.Fprintf(writer, "%s", jsonFromProfile(user.GetProfile()))
+		} else {
+			writer.WriteHeader(http.StatusInternalServerError)
+		}
+	}
 }
 
 func getProfile(writer http.ResponseWriter, request *http.Request) {
+	vars := mux.Vars(request)
+
+	userId, _ := strconv.Atoi(vars["user-id"])
+	user, userFound := oxpit.GetSystem().GetUser(userId)
+
+	if !userFound {
+		writer.WriteHeader(http.StatusNotFound)
+	} else {
+		profile, profileFound := user.GetProfile()
+		if !profileFound {
+			writer.WriteHeader(http.StatusNotFound)
+		} else {
+			header := writer.Header()
+			header.Set("Content-Type", "application/json")
+
+			writer.WriteHeader(http.StatusOK)
+			fmt.Fprintf(writer, "%s", jsonFromProfile(profile))
+		}
+	}
 }
 
 func createBoard(writer http.ResponseWriter, request *http.Request) {
+	vars := mux.Vars(request)
+
+	userId, _ := strconv.Atoi(vars["user-id"])
+	user, userFound := oxpit.GetSystem().GetUser(userId)
+
+	if !userFound {
+		writer.WriteHeader(http.StatusNotFound)
+	} else {
+		bytes := make([]byte, request.ContentLength)
+		_, err := request.Read(bytes)
+		if err == nil {
+			receivedBoard := toBoardFromBytes(bytes)
+			newBoard := user.CreateBoard(receivedBoard.Title)
+
+			header := writer.Header()
+			header.Set("Content-Type", "application/json")
+
+			writer.WriteHeader(http.StatusOK)
+			fmt.Fprintf(writer, "%s", jsonFromBoard(newBoard))
+		}
+	}
 }
 
 func listBoards(writer http.ResponseWriter, request *http.Request) {

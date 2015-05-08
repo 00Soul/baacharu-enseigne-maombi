@@ -52,3 +52,42 @@ func (user User) GetBoards() []Board {
 
 	return boardList
 }
+
+func (user User) GetBoardById(id int) (Board, bool) {
+	board, found := GetSystem().boards[id]
+	if found && (board.OwnedBy != user.Id) {
+		board = Board{}
+		found = false
+	}
+
+	return board, found
+}
+
+func (user User) GetBoardByTitle(title string) (Board, bool) {
+	var board Board
+	boardList := user.GetBoards()
+	found := false
+
+	title = strings.ToLower(title)
+	for i := 0; (i < len(boardList)) && !found; i++ {
+		if strings.ToLower(boardList[i].Title) == title {
+			board = boardList[i]
+			found = true
+		}
+	}
+
+	return board, found
+}
+
+func (user User) SetProfile(profile Profile) {
+	_, found := user.GetProfile()
+	if !found {
+		GetSystem().createProfile(user, profile)
+	} else {
+		GetSystem().updateProfile(user, profile)
+	}
+}
+
+func (user User) GetProfile() (Profile, bool) {
+	return GetSystem().getProfile(user)
+}

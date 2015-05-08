@@ -13,8 +13,9 @@ type System struct {
 func NewSystem() *System {
 	system := new(System)
 	system.counter = 0
-	system.boards = make(map[int]Board)
 	system.users = make(map[int]User)
+	system.boards = make(map[int]Board)
+	system.profiles = make(map[int]Profile)
 
 	return system
 }
@@ -52,7 +53,7 @@ func (system *System) GetUsers() []User {
 	return userList
 }
 
-func (system System) GetUser(userId int) (User, bool) {
+func (system System) GetUserById(userId int) (User, bool) {
 	var user User
 	var ok bool
 
@@ -75,4 +76,29 @@ func (system *System) createBoard(user User, title string) Board {
 	system.boards[board.Id] = *board
 
 	return *board
+}
+
+func (system *System) createProfile(user User, profile Profile) {
+	system.profiles[user.Id] = profile
+}
+
+func (system *System) updateProfile(user User, profile Profile) {
+	existingProfile, found := system.getProfile(user)
+	if found {
+		if profile.Email != "" {
+			existingProfile.Email = profile.Email
+		}
+
+		if profile.Username != "" {
+			existingProfile.Username = profile.Username
+		}
+
+		if profile.Alias != "" {
+			existingProfile.Alias = profile.Alias
+		}
+	}
+}
+
+func (system System) getProfile(user User) {
+	return system.profiles[user.Id]
 }
