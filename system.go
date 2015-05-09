@@ -5,9 +5,10 @@ import (
 )
 
 type System struct {
-	counter int
-	users   map[int]User
-	boards  map[int]Board
+	counter  int
+	users    map[int]User
+	boards   map[int]Board
+	profiles map[int]Profile
 }
 
 func NewSystem() *System {
@@ -83,8 +84,7 @@ func (system *System) createProfile(user User, profile Profile) {
 }
 
 func (system *System) updateProfile(user User, profile Profile) {
-	existingProfile, found := system.getProfile(user)
-	if found {
+	if existingProfile, found := system.profiles[user.Id]; found {
 		if profile.Email != "" {
 			existingProfile.Email = profile.Email
 		}
@@ -96,9 +96,13 @@ func (system *System) updateProfile(user User, profile Profile) {
 		if profile.Alias != "" {
 			existingProfile.Alias = profile.Alias
 		}
+
+		system.profiles[user.Id] = existingProfile
 	}
 }
 
-func (system System) getProfile(user User) {
-	return system.profiles[user.Id]
+func (system System) getProfile(user User) (Profile, bool) {
+	profile, found := system.profiles[user.Id]
+
+	return profile, found
 }

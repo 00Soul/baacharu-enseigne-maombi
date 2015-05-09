@@ -3,11 +3,10 @@ package json
 import (
 	"encoding/json"
 	"reflect"
-	"strconv"
 )
 
 type Field struct {
-	Name          string
+	flattenedName string
 	flattenFunc   func(interface{}) interface{}
 	unflattenFunc func(interface{}) interface{}
 }
@@ -33,7 +32,7 @@ func NewContext() *Context {
 	return c
 }
 
-func getGlobalContext() {
+func getGlobalContext() *Context {
 	if globalContext == nil {
 		globalContext = NewContext()
 	}
@@ -42,7 +41,7 @@ func getGlobalContext() {
 }
 
 func New(t reflect.Type) *Mapping {
-	return getGlobalContext().NewMapping(t)
+	return getGlobalContext().New(t)
 }
 
 func Get(t reflect.Type) *Mapping {
@@ -54,18 +53,17 @@ func Del(t reflect.Type) {
 }
 
 func (c *Context) New(t reflect.Type) *Mapping {
-	m := new(Mapping)
+	var m Mapping
 	m.structType = t
 	m.fields = make(map[string]Field)
 
 	c.mappings[t] = m
 
-	return m
+	return &m
 }
 
 func (c Context) Get(t reflect.Type) *Mapping {
-	m, found := c.mappings[t]
-	if found {
+	if m, found := c.mappings[t]; found {
 		return &m
 	} else {
 		return nil
@@ -98,18 +96,18 @@ func (m *Mapping) UnflattenFunc(fn func(interface{}) interface{}) *Mapping {
 }
 
 func (f *Field) Name(name string) *Field {
-	f.Name = name
+	f.flattenedName = name
 
 	return f
 }
 
-func (f *Field) FlattenFunc(fn func(interface{}) ([]byte, error)) *Field {
+func (f *Field) FlattenFunc(fn func(interface{}) interface{}) *Field {
 	f.flattenFunc = fn
 
 	return f
 }
 
-func (f *Field) UnflattenFunc(fn func([]byte, interface{}) error) *Field {
+func (f *Field) UnflattenFunc(fn func(interface{}) interface{}) *Field {
 	f.unflattenFunc = fn
 
 	return f
@@ -148,9 +146,9 @@ func (c Context) Marshal(i interface{}) ([]byte, error) {
 func (c Context) Unmarshal(data []byte, i interface{}) error {
 	var v interface{}
 
-	err = json.Unmarshal(data, &v)
+	err := json.Unmarshal(data, &v)
 	obj := c.unflatten(v, reflect.TypeOf(i))
-	&i = &obj
+	i = obj
 
 	return err
 }
@@ -167,7 +165,9 @@ func (c Context) unflatten(i interface{}, t reflect.Type) interface{} {
 	} else if slice, isSlice := i.([]interface{}); isSlice && t.Kind() == reflect.Slice {
 		v = c.fromSlice(slice, t)
 	} else {
-		err := json.Unmarshal([]byte(i), &v)
+		if bytes, isByteSlice := i.([]byte); isByteSlice {
+			json.Unmarshal(bytes, &v)
+		}
 	}
 
 	return v
@@ -189,14 +189,12 @@ func (c Context) toSlice(i interface{}) []interface{} {
 	return slice
 }
 
-func (c Context) fromSlice(i interface{}) interface{} {
+func (c Context) fromSlice(i []interface{}, t reflect.Type) interface{} {
+	//slice := reflect.MakeSlice(reflect.SliceOf(t), 0, 1)
 	slice := make([]interface{}, 0, 1)
 
-	islice, ok := i.([]interface{})
-	if ok {
-		for _, item := range islice {
-			slice = append(slice, c.unflatten(item))
-		}
+	for _, item := range i {
+		slice = append(slice, c.unflatten(item, t))
 	}
 
 	return slice
@@ -216,21 +214,16 @@ func (c Context) toMap(i interface{}) map[string][]byte {
 
 		if found {
 			field, fieldFound = mapping.fields[name]
-			name := mapping.fields[name].Name
+			name = mapping.fields[name].flattenedName
 		}
-
-		var bytes []bytes
-		var err error
 
 		fv := v.Field(n).Interface()
 
 		if fieldFound && field.flattenFunc != nil {
-			bytes, err = json.Marshal(field.flattenFunc(fv))
+			m[name], _ = json.Marshal(field.flattenFunc(fv))
 		} else {
-			bytes, err = c.Marshal(fv)
+			m[name], _ = c.Marshal(fv)
 		}
-
-		m[name] = bytes
 	}
 
 	return m
@@ -246,21 +239,24 @@ func (c Context) fromMap(m map[string]interface{}, t reflect.Type) reflect.Value
 		var field Field
 		var fieldFound bool
 
-		name := v.Type().Field(n).Name
+		key := v.Type().Field(n).Name
 
 		if found {
-			field, fieldFound = mapping.fields[name]
-			name := mapping.fields[name].Name
+			field, fieldFound = mapping.fields[key]
+			key = mapping.fields[key].flattenedName
 		}
 
-		fv := v.Field(n).Interface()
-		if fieldFound && field.unflattenFunc != nil {
-			v.Field(n).Set(field.unflattenFunc(m[name]))
-		} else {
-			bytes, err = c.Marshal(fv)
-		}
+		if value, keyFound := m[key]; keyFound {
+			var i interface{}
 
-		m[name] = bytes
+			if fieldFound && field.unflattenFunc != nil {
+				i = field.unflattenFunc(value)
+			} else {
+				i = c.unflatten(value, v.Field(n).Type())
+			}
+
+			v.Field(n).Set(reflect.ValueOf(i))
+		}
 	}
 
 	return p

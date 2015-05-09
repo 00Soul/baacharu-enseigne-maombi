@@ -14,7 +14,7 @@ func setupJsonMappings() {
 	mapping.FlattenFunc(fromTime)
 	mapping.UnflattenFunc(toTime)
 
-	mapping = json.mapping.New(oxpit.AccountState)
+	mapping := json.mapping.New(oxpit.AccountState)
 	mapping.FlattenFunc(flattenAccountState)
 	mapping.UnflattenFunc(unflattenAccountState)
 
@@ -22,6 +22,50 @@ func setupJsonMappings() {
 	mapping.Field(oxpit.User.Id).Name("id")
 	mapping.Field(oxpit.User.State).Name("state")
 	mapping.Field(oxpit.User.CreatedWhen).Name("created-when")
+
+	mapping = json.mapping.New(oxpit.Profile)
+	mapping.Field(oxpit.Profile.Email).Name("email")
+	mapping.Field(oxpit.Profile.Username).Name("username")
+	mapping.Field(oxpit.Profile.Alias).Name("alias")
+
+	mapping = json.mapping.New(oxpit.Board)
+	mapping.Field(oxpit.Board.Id).Name("id")
+	mapping.Field(oxpit.Board.Title).Name("title")
+	mapping.Field(oxpit.Board.Columns).Name("columns")
+	mapping.Field(oxpit.Board.Cards).Name("cards")
+	mapping.Field(oxpit.Board.OwnedBy).Name("owned-by")
+	mapping.Field(oxpit.Board.CreatedBy).Name("created-by")
+	mapping.Field(oxpit.Board.CreatedWhen).Name("created-when")
+
+	mapping = json.mapping.New(oxpit.Card)
+	mapping.Field(oxpit.Card.Id).Name("id")
+	mapping.Field(oxpit.Card.Stage).Name("stage")
+	mapping.Field(oxpit.Card.CardType).Name("card-type")
+	mapping.Field(oxpit.Card.Data).Name("data")
+
+	mapping = json.mapping.New(oxpit.Column)
+	mapping.Field(oxpit.Column.Title).Name("title")
+	mapping.Field(oxpit.Column.WipLimit).Name("wiplimit")
+}
+
+func fromTime(object interface{}) interface{} {
+	if when, isTime := object.(time.Time); isTime {
+		return when.Format(timeLayout)
+	} else {
+		return "0000-01-01T00:00:00+00:00"
+	}
+}
+
+func toTime(jsonTime interface{}) interface{} {
+	if timeString, isString := jsonTime.(string); isString {
+		if when, err := time.Parse(timeLayout, timeString); err == nil {
+			return when
+		} else {
+			return time.Date(0, 1, 1, 0, 0, 0, 0, time.UTC)
+		}
+	} else {
+		return time.Date(0, 1, 1, 0, 0, 0, 0, time.UTC)
+	}
 }
 
 func flattenAccountState(goObject interface{}) interface{} {
@@ -57,6 +101,7 @@ func unflattenAccountState(jsonString interface{}) interface{} {
 	return goObject
 }
 
+/*
 func toUser(jsonString string) oxpit.User {
 	var jsonObject map[string]interface{}
 	json.Unmarshal([]byte(jsonString), &jsonObject)
@@ -104,14 +149,6 @@ func toSliceFrom(jsonArray interface{}, convertFunction func(map[string]interfac
 	return slice
 }
 
-func toTimeFrom(jsonTime interface{}) time.Time {
-	when, err := time.Parse(timeLayout, jsonTime.(string))
-	if err != nil {
-		when = time.Now().UTC()
-	}
-
-	return when
-}
 
 func interfaceFromUser(user oxpit.User) interface{} {
 	return map[string]string{
@@ -257,4 +294,4 @@ func toStructFromBytes(jsonBytes []byte, convertFunction func(map[string]interfa
 	json.Unmarshal(bytes, &object)
 
 	return convertFunction(object)
-}
+}*/
