@@ -3,9 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/00Soul/mapping"
+	"github.com/00Soul/mapping/json"
 	"github.com/00Soul/oxpit"
 	"github.com/gorilla/mux"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -59,19 +60,8 @@ func listUsers(writer http.ResponseWriter, request *http.Request) {
 	header.Set("Content-Type", "application/json")
 
 	writer.WriteHeader(http.StatusOK)
-	fmt.Fprintf(writer, "%s", jsonString)
-
-	mapping := oxpit.json.NewMapping(oxpit.User)
-	mapping.Field("Id").Name("id")
-	mapping.Field("State").Name("state").MarshalFunc(acctState2Json)
-	mapping.Field("State").UnmarshalFunc(func(data []byte) (interface{}, error) {
-		jsonString, ok := data.(string)
-		when, err := time.Parse(timeLayout, jsonString)
-	})
-	mapping.Field("CreatedWhen").Name("created-when")
-	mapping.Field("CreatedWhen").MarshalFunc(toTime)
-	mapping.Field("CreatedWhen").UnmarshalFunc(fromTime)
-	fmt.Fprintf(writer, "%s", oxpit.json.toJson(users))
+	//fmt.Fprintf(writer, "%s", jsonString)
+	fmt.Fprintf(writer, "%s", json.Marshal(users))
 }
 
 func getUser(writer http.ResponseWriter, request *http.Request) {
