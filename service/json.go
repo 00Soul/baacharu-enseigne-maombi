@@ -8,24 +8,30 @@ import (
 
 const timeLayout string = "2006-01-02T15:04:05-07:00"
 
+var jsonMappingContext *mappings.Context
+
 func setupMappings() {
-	mapping := mappings.New(time.Time)
+	context := mappings.NewContext()
+
+	mapping := context.New(time.Time)
 	mapping.FlattenFunc(fromTime)
 	mapping.UnflattenFunc(toTime)
 
-	mappings.New(oxpit.AccountState).FlattenFunc(flattenAccountState).UnflattenFunc(unflattenAccountState)
+	mapping = context.New(oxpit.AccountState)
+	mapping.FlattenFunc(flattenAccountState)
+	mapping.UnflattenFunc(unflattenAccountState)
 
-	mapping = mappings.New(oxpit.User)
+	mapping = context.New(oxpit.User)
 	mapping.Field(oxpit.User.Id).Name("id")
 	mapping.Field(oxpit.User.State).Name("state")
 	mapping.Field(oxpit.User.CreatedWhen).Name("created-when")
 
-	mapping = mappings.New(oxpit.Profile)
+	mapping = context.New(oxpit.Profile)
 	mapping.Field(oxpit.Profile.Email).Name("email")
 	mapping.Field(oxpit.Profile.Username).Name("username")
 	mapping.Field(oxpit.Profile.Alias).Name("alias")
 
-	mapping = mappings.New(oxpit.Board)
+	mapping = context.New(oxpit.Board)
 	mapping.Field(oxpit.Board.Id).Name("id")
 	mapping.Field(oxpit.Board.Title).Name("title")
 	mapping.Field(oxpit.Board.Columns).Name("columns")
@@ -34,15 +40,17 @@ func setupMappings() {
 	mapping.Field(oxpit.Board.CreatedBy).Name("created-by")
 	mapping.Field(oxpit.Board.CreatedWhen).Name("created-when")
 
-	mapping = mappings.New(oxpit.Card)
+	mapping = context.New(oxpit.Card)
 	mapping.Field(oxpit.Card.Id).Name("id")
 	mapping.Field(oxpit.Card.Stage).Name("stage")
 	mapping.Field(oxpit.Card.CardType).Name("card-type")
 	mapping.Field(oxpit.Card.Data).Name("data")
 
-	mapping = mappings.New(oxpit.Column)
+	mapping = context.New(oxpit.Column)
 	mapping.Field(oxpit.Column.Title).Name("title")
 	mapping.Field(oxpit.Column.WipLimit).Name("wiplimit")
+
+	jsonMappingContext = context
 }
 
 func fromTime(i interface{}) interface{} {

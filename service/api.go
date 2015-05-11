@@ -25,15 +25,15 @@ func GetServiceContext() *ServiceContext {
 	return persistentServiceContext
 }
 
-func readJson(reader io.Reader, object interface{}) error {
-	return json.DecodeWithContext(reader, object, jsonMappingContext)
+func readJson(request *http.Request, object interface{}) error {
+	return json.DecodeWithContext(request.Body, object, jsonMappingContext)
 }
 
-func writeJson(writer io.Writer, object interface{}) error {
+func writeJson(writer http.ResponseWriter, object interface{}) error {
 	return writeJsonWithCode(writer, object, http.StatusOK)
 }
 
-func writeJsonWithCode(writer io.Writer, object interface{}, code int) error {
+func writeJsonWithCode(writer http.ResponseWriter, object interface{}, code int) error {
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(code)
 
@@ -43,103 +43,71 @@ func writeJsonWithCode(writer io.Writer, object interface{}, code int) error {
 func createUser(writer http.ResponseWriter, request *http.Request) {
 	user := oxpit.NewUser()
 
-	context := GetServiceContext()
-	route := context.router.Get("user")
+	route := GetServiceContext().router.Get("user")
 	url, err := route.URL("user-id", strconv.Itoa(user.Id))
 	if err != nil {
 		url, _ = url.Parse("http://localhost:8088/try/this")
 	}
 
 	writer.Header().Set("Location", url.String())
-
 	writeJsonWithCode(writer, user, http.StatusCreated)
 }
 
 func listUsers(writer http.ResponseWriter, request *http.Request) {
 	userList := oxpit.GetSystem().GetUsers()
 
-	/*users := make([]interface{}, 0, 1)
-	for _, u := range userList {
-		users = append(users, interfaceFromUser(u))
-	}
-
-	jsonString, err := json.Marshal(users)
-	if err != nil {
-		jsonString = []byte("{\"error\":\"json.Marshal() failed\"}")
-	}*/
-
-	//header := writer.Header()
-	//header.Set("Content-Type", "application/json")
-
-	//writer.WriteHeader(http.StatusOK)
-	//fmt.Fprintf(writer, "%s", jsonString)
-	//fmt.Fprintf(writer, "%s", json.Marshal(users))
 	writeJson(writer, userList)
 }
 
-func getUser(writer http.ResponseWriter, request *http.Request) {
-	vars := mux.Vars(request)
-	userId, _ := strconv.Atoi(vars["user-id"])
-	user, found := oxpit.GetSystem().GetUser(userId)
+func retrieveUser(request *http.Request) (oxpit.User, error) {
+	var user oxpit.User
 
-	if !found {
-		writer.WriteHeader(http.StatusNotFound)
+	vars := mux.Vars(request)
+	found := false
+
+	if userId, err := strconv.Atoi(vars["user-id"]); err == nil {
+		if user, found = oxpit.GetSystem().GetUserById(userId); !found {
+			writer.WriteHeader(http.StatusNotFound)
+		}
 	} else {
+		writer.WriteHeader(http.StatusInternalServerError)
+	}
+
+	return user, found
+}
+
+func getUser(writer http.ResponseWriter, request *http.Request) {
+	if user, found := retrieveUser(request); found {
 		writeJson(writer, user)
 	}
 }
 
 func createProfile(writer http.ResponseWriter, request *http.Request) {
-	vars := mux.Vars(request)
+	if user, found := retrieveUser(request); found {
+		var profile oxpit.Profile
 
-	userId, _ := strconv.Atoi(vars["user-id"])
-	user, found := oxpit.GetSystem().GetUser(userId)
+		readJson(request, &profile)
+		user.SetProfile(profile)
 
-	if !found {
-		writer.WriteHeader(http.StatusNotFound)
-	} else {
-		bytes := make([]byte, request.ContentLength)
-		_, err := request.Read(bytes)
-		if err == nil {
-			var profile = toProfileFromBytes(bytes)
-
-			user.SetProfile(profile)
-
-			header := writer.Header()
-			header.Set("Content-Type", "application/json")
-
-			writer.WriteHeader(http.StatusOK)
-			fmt.Fprintf(writer, "%s", jsonFromProfile(user.GetProfile()))
-		} else {
-			writer.WriteHeader(http.StatusInternalServerError)
+		route := GetServiceContext().router.Get("profile")
+		url, err := route.URL("user-id", strconv.Itoa(user.Id))
+		if err != nil {
+			url, _ = url.Parse("http://localhost:8088/try/this")
 		}
+
+		writer.Header().Set("Location", url.String())
+		writeJsonWithCode(writer, profile)
 	}
 }
 
 func updateProfile(writer http.ResponseWriter, request *http.Request) {
-	vars := mux.Vars(request)
+	if user, found := retrieveUser(request); found {
+		var profile oxpit.Profile
 
-	userId, _ := strconv.Atoi(vars["user-id"])
-	user, found := oxpit.GetSystem().GetUser(userId)
+		readJson(request, &profile)
+		user.SetProfile(profile)
 
-	if !found {
-		writer.WriteHeader(http.StatusNotFound)
-	} else {
-		bytes := make([]byte, request.ContentLength)
-		_, err := request.Read(bytes)
-		if err == nil {
-			var profile = toProfileFromBytes(bytes)
-
-			user.SetProfile(profile)
-
-			header := writer.Header()
-			header.Set("Content-Type", "application/json")
-
-			writer.WriteHeader(http.StatusOK)
-			fmt.Fprintf(writer, "%s", jsonFromProfile(user.GetProfile()))
-		} else {
-			writer.WriteHeader(http.StatusInternalServerError)
-		}
+		writeJson(writer, profile)
 	}
 }
 
@@ -226,25 +194,25 @@ func setupRoutes() {
 	userRouter := context.router.Path("/api/users/{user-id}").Name("user").Subrouter()
 	userRouter.Methods("GET").HandlerFunc(getUser)
 
-	userProfileRouter := context.router.Path("/api/users/{user-id}/profile").Name("user").Subrouter()
+	userProfileRouter := context.router.Path("/api/users/{user-id}/profile").Name("profile").Subrouter()
 	userProfileRouter.Methods("POST").HandlerFunc(createProfile)
 	userProfileRouter.Methods("PUT").HandlerFunc(updateProfile)
 	userProfileRouter.Methods("GET").HandlerFunc(getProfile)
 
-	boardsRouter := context.router.Path("/api/users/{user-id}/boards").Subrouter()
+	boardsRouter := context.router.Path("/api/users/{user-id}/boards").Name("boards").Subrouter()
 	boardsRouter.Methods("POST").HandlerFunc(createBoard)
 	boardsRouter.Methods("GET").HandlerFunc(listBoards)
 
-	boardRouter := context.router.Path("/api/users/{user-id}/boards/{board-id}").Subrouter()
+	boardRouter := context.router.Path("/api/users/{user-id}/boards/{board-id}").Name("board").Subrouter()
 	boardRouter.Methods("GET").HandlerFunc(viewBoard)
 	boardRouter.Methods("PUT").HandlerFunc(modifyBoard)
 	boardRouter.Methods("DELETE").HandlerFunc(deleteBoard)
 
-	cardsRouter := context.router.Path("/api/users/{user-id}/boards/{board-id}/cards").Subrouter()
+	cardsRouter := context.router.Path("/api/users/{user-id}/boards/{board-id}/cards").Name("cards").Subrouter()
 	cardsRouter.Methods("POST").HandlerFunc(createCard)
 	cardsRouter.Methods("GET").HandlerFunc(listCards)
 
-	cardRouter := context.router.Path("/api/users/{user-id}/boards/{board-id}/cards/{card-id}").Subrouter()
+	cardRouter := context.router.Path("/api/users/{user-id}/boards/{board-id}/cards/{card-id}").Name("card").Subrouter()
 	cardRouter.Methods("GET").HandlerFunc(inspectCard)
 	cardRouter.Methods("PUT").HandlerFunc(modifyCard)
 	cardRouter.Methods("DELETE").HandlerFunc(deleteCard)
