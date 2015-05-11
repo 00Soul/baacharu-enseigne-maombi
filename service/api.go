@@ -1,12 +1,12 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"github.com/00Soul/mapping"
-	"github.com/00Soul/mapping/json"
+	"github.com/00Soul/mappings"
+	"github.com/00Soul/mappings/json"
 	"github.com/00Soul/oxpit"
 	"github.com/gorilla/mux"
+	"io"
 	"net/http"
 	"strconv"
 )
@@ -25,6 +25,21 @@ func GetServiceContext() *ServiceContext {
 	return persistentServiceContext
 }
 
+func readJson(reader io.Reader, object interface{}) error {
+	return json.DecodeWithContext(reader, object, jsonMappingContext)
+}
+
+func writeJson(writer io.Writer, object interface{}) error {
+	return writeJsonWithCode(writer, object, http.StatusOK)
+}
+
+func writeJsonWithCode(writer io.Writer, object interface{}, code int) error {
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(code)
+
+	return json.EncodeWithContext(writer, object, jsonMappingContext)
+}
+
 func createUser(writer http.ResponseWriter, request *http.Request) {
 	user := oxpit.NewUser()
 
@@ -35,18 +50,15 @@ func createUser(writer http.ResponseWriter, request *http.Request) {
 		url, _ = url.Parse("http://localhost:8088/try/this")
 	}
 
-	header := writer.Header()
-	header.Set("Content-Type", "application/json")
-	header.Set("Location", url.String())
+	writer.Header().Set("Location", url.String())
 
-	writer.WriteHeader(http.StatusCreated)
-	fmt.Fprintf(writer, "%s", jsonFromUser(user))
+	writeJsonWithCode(writer, user, http.StatusCreated)
 }
 
 func listUsers(writer http.ResponseWriter, request *http.Request) {
 	userList := oxpit.GetSystem().GetUsers()
 
-	users := make([]interface{}, 0, 1)
+	/*users := make([]interface{}, 0, 1)
 	for _, u := range userList {
 		users = append(users, interfaceFromUser(u))
 	}
@@ -54,14 +66,15 @@ func listUsers(writer http.ResponseWriter, request *http.Request) {
 	jsonString, err := json.Marshal(users)
 	if err != nil {
 		jsonString = []byte("{\"error\":\"json.Marshal() failed\"}")
-	}
+	}*/
 
-	header := writer.Header()
-	header.Set("Content-Type", "application/json")
+	//header := writer.Header()
+	//header.Set("Content-Type", "application/json")
 
-	writer.WriteHeader(http.StatusOK)
+	//writer.WriteHeader(http.StatusOK)
 	//fmt.Fprintf(writer, "%s", jsonString)
-	fmt.Fprintf(writer, "%s", json.Marshal(users))
+	//fmt.Fprintf(writer, "%s", json.Marshal(users))
+	writeJson(writer, userList)
 }
 
 func getUser(writer http.ResponseWriter, request *http.Request) {
@@ -72,11 +85,7 @@ func getUser(writer http.ResponseWriter, request *http.Request) {
 	if !found {
 		writer.WriteHeader(http.StatusNotFound)
 	} else {
-		header := writer.Header()
-		header.Set("Content-Type", "application/json")
-
-		writer.WriteHeader(http.StatusOK)
-		fmt.Fprintf(writer, "%s", jsonFromUser(user))
+		writeJson(writer, user)
 	}
 }
 
