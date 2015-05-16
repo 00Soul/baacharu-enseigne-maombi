@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html x-ng-app="winch">
+    <head>
+        <title>Winch: Kanban for mortals!</title>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <script src="scripts/angular.js"></script>
+        <script src="scripts/angular-route.js"></script>
+        <script src="scripts/angular-animate.js"></script>
+
+        <link href="styles/basic.css" rel="stylesheet"/>
+    </head>
+    <body x-ng-cloak>
+        <div id="header">
+        </div>
+
+        <div class="slide-animation-container">
+            <div x-ng-view id="ng-view" class="slide-animation"></div>
+        </div>
+
+        <div id="footer">
+        </div>
+    </body>
+</html>
