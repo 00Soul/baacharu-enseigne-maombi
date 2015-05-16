@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/00Soul/mappings"
 	"github.com/00Soul/oxpit"
+	"reflect"
 	"time"
 )
 
@@ -13,25 +14,25 @@ var jsonMappingContext *mappings.Context
 func setupMappings() {
 	context := mappings.NewContext()
 
-	mapping := context.New(time.Time)
+	mapping := context.New(reflect.TypeOf(time.Time{}))
 	mapping.FlattenFunc(fromTime)
 	mapping.UnflattenFunc(toTime)
 
-	mapping = context.New(oxpit.AccountState)
+	mapping = context.New(reflect.TypeOf(oxpit.AccountState))
 	mapping.FlattenFunc(flattenAccountState)
 	mapping.UnflattenFunc(unflattenAccountState)
 
-	mapping = context.New(oxpit.User)
+	mapping = context.New(reflect.TypeOf(oxpit.User{}))
 	mapping.Field(oxpit.User.Id).Name("id")
 	mapping.Field(oxpit.User.State).Name("state")
 	mapping.Field(oxpit.User.CreatedWhen).Name("created-when")
 
-	mapping = context.New(oxpit.Profile)
+	mapping = context.New(reflect.TypeOf(oxpit.Profile{}))
 	mapping.Field(oxpit.Profile.Email).Name("email")
 	mapping.Field(oxpit.Profile.Username).Name("username")
 	mapping.Field(oxpit.Profile.Alias).Name("alias")
 
-	mapping = context.New(oxpit.Board)
+	mapping = context.New(reflect.TypeOf(oxpit.Board{}))
 	mapping.Field(oxpit.Board.Id).Name("id")
 	mapping.Field(oxpit.Board.Title).Name("title")
 	mapping.Field(oxpit.Board.Columns).Name("columns")
@@ -40,13 +41,13 @@ func setupMappings() {
 	mapping.Field(oxpit.Board.CreatedBy).Name("created-by")
 	mapping.Field(oxpit.Board.CreatedWhen).Name("created-when")
 
-	mapping = context.New(oxpit.Card)
+	mapping = context.New(reflect.TypeOf(oxpit.Card{}))
 	mapping.Field(oxpit.Card.Id).Name("id")
 	mapping.Field(oxpit.Card.Stage).Name("stage")
 	mapping.Field(oxpit.Card.CardType).Name("card-type")
 	mapping.Field(oxpit.Card.Data).Name("data")
 
-	mapping = context.New(oxpit.Column)
+	mapping = context.New(reflect.TypeOf(oxpit.Column{}))
 	mapping.Field(oxpit.Column.Title).Name("title")
 	mapping.Field(oxpit.Column.WipLimit).Name("wiplimit")
 
