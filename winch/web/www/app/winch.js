@@ -6,18 +6,6 @@
         'ngRoute'
     ]);
 
-    app.controller('DefaultController', function($scope) {
-    });
-
-    app.controller('LoginController', function($scope) {
-    });
-
-    app.controller('RegistrationController', function($scope) {
-    });
-
-    app.controller('BoardController', function($scope) {
-    });
-
     app.config(function($routeProvider, $locationProvider) {
         var viewBase = '/views/'
 
