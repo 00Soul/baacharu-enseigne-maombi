@@ -32,6 +32,7 @@ type Board struct {
 	CreatedWhen time.Time
 }
 
+/*
 func System(actor User, app Application) *System {
 }
 
@@ -66,4 +67,4 @@ func (service *BoardService) AddCard() {
 }
 
 func (service *BoardService) MoveCard() {
-}
+}*/

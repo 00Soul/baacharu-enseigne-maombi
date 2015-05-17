@@ -1,7 +1,6 @@
 package oxpit
 
 import (
-	"strings"
 	"time"
 )
 
@@ -24,7 +23,7 @@ func (state AccountState) String() string {
 }
 
 type User struct {
-	Id          int
+	Id          IdentityToken
 	State       AccountState
 	CreatedWhen time.Time
 }
@@ -35,7 +34,7 @@ type Profile struct {
 	Alias    string
 }
 
-func NewUser() User {
+/*func NewUser() User {
 	return GetSystem().createUser()
 }
 
@@ -91,4 +90,4 @@ func (user User) SetProfile(profile Profile) {
 
 func (user User) GetProfile() (Profile, bool) {
 	return GetSystem().getProfile(user)
-}
+}*/

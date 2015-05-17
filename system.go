@@ -1,8 +1,8 @@
 package oxpit
 
-import (
+/*import (
 	"time"
-)
+)*/
 
 type System struct {
 	counter  int
@@ -11,7 +11,7 @@ type System struct {
 	profiles map[int]Profile
 }
 
-func NewSystem() *System {
+/*func NewSystem() *System {
 	system := new(System)
 	system.counter = 0
 	system.users = make(map[int]User)
@@ -105,4 +105,4 @@ func (system System) getProfile(user User) (Profile, bool) {
 	profile, found := system.profiles[user.Id]
 
 	return profile, found
-}
+}*/

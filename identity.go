@@ -1,4 +1,4 @@
-package spi
+package oxpit
 
 import (
 	"crypto/md5"
@@ -6,7 +6,9 @@ import (
 	"encoding/base32"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"math/rand"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -16,7 +18,7 @@ type Token struct {
 }
 
 func NewToken(bytes []byte) Token {
-	token := new(Token)
+	var token Token
 
 	token.data = make([]byte, len(bytes))
 	copy(token.data, bytes)
@@ -24,36 +26,51 @@ func NewToken(bytes []byte) Token {
 	return token
 }
 
-func NewTokenFromHex(str string) Token {
-	var token *Token
+func NewTokenFromHex(str string) (Token, error) {
+	var token Token
 
 	str = strings.Replace(str, "0x", "", 1)
 
-	if bytes, ok := hex.DecodeString(str); ok {
-		token = NewToken(len(bytes))
+	bytes, err := hex.DecodeString(str)
+	if err == nil {
+		token = NewToken(bytes)
 	}
 
-	return token
+	return token, err
 }
 
-func NewTokenFromBase64(str string) Token {
-	var token *Token
+func NewTokenFromBase64(str string) (Token, error) {
+	var token Token
 
-	if bytes, ok := base64.StdEncoding.DecodeString(str); ok {
-		token = NewToken(len(bytes))
+	bytes, err := base64.StdEncoding.DecodeString(str)
+	if err == nil {
+		token = NewToken(bytes)
 	}
 
-	return token
+	return token, err
 }
 
-func NewTokenFromBase32(str string) Token {
-	var token *Token
+func NewTokenFromBase32(str string) (Token, error) {
+	var token Token
 
-	if bytes, ok := base32.StdEncoding.DecodeString(str); ok {
-		token = NewToken(len(bytes))
+	bytes, err := base32.StdEncoding.DecodeString(str)
+	if err == nil {
+		token = NewToken(bytes)
 	}
 
-	return token
+	return token, err
+}
+
+func (token Token) Length() int {
+	return len(token.data)
+}
+
+func (token Token) ToBytes() []byte {
+	bytes := make([]byte, len(token.data))
+
+	copy(bytes, token.data)
+
+	return bytes
 }
 
 func (token Token) ToHex() string {
@@ -61,11 +78,11 @@ func (token Token) ToHex() string {
 }
 
 func (token Token) ToBase64() string {
-	return base64.StdEncoding.Encode(token.data)
+	return base64.StdEncoding.EncodeToString(token.data)
 }
 
 func (token Token) ToBase32() string {
-	return base32.StdEncoding.Encode(token.data)
+	return base32.StdEncoding.EncodeToString(token.data)
 }
 
 func NewIdentityToken() IdentityToken {
@@ -74,18 +91,41 @@ func NewIdentityToken() IdentityToken {
 	buffer = strconv.AppendInt(buffer, time.Now().Unix(), 10)
 	buffer = strconv.AppendInt(buffer, rand.Int63(), 10)
 
-	return IdentityToken{NewToken(md5.Sum(buffer))}
+	hash := md5.Sum(buffer)
+
+	return IdentityToken{NewToken(hash[0:16])}
 }
 
-func IdentityTokenFromBytes(bytes []byte) (IdentityToken, bool) {
+const newIdentityErrorString = "Conversion of the string into base32 does not result in a 16 byte token"
+
+const newAccessErrorString = "Conversion of the string into base32 does not result in a 32 byte token"
+
+func NewIdentityTokenFromBase32(str string) (IdentityToken, error) {
+	var identityToken IdentityToken
+
+	token, err := NewTokenFromBase32(str)
+	if err == nil {
+		if token.Length() == 16 {
+			identityToken = IdentityToken{token}
+		} else {
+			err = errors.New(newIdentityErrorString)
+		}
+	}
+
+	return identityToken, err
+}
+
+func NewIdentityTokenFromBytes(bytes []byte) (IdentityToken, error) {
 	token := IdentityToken{}
-	ok := false
+	var err error = nil
 
 	if len(bytes) == 16 {
 		token = IdentityToken{NewToken(bytes)}
+	} else {
+		err = errors.New(newIdentityErrorString)
 	}
 
-	return token, ok
+	return token, err
 }
 
 func NewAccessToken() AccessToken {
@@ -94,22 +134,45 @@ func NewAccessToken() AccessToken {
 	buffer = strconv.AppendInt(buffer, time.Now().Unix(), 10)
 	buffer = strconv.AppendInt(buffer, rand.Int63(), 10)
 
-	return AccessToken{NewToken(sha256.Sum256(buffer))}
+	hash := sha256.Sum256(buffer)
+
+	return AccessToken{NewToken(hash[0:32])}
 }
 
-func AccessTokenFromBytes(bytes []byte) (AccessToken, bool) {
-	token := AccessToken{}
-	ok := false
+func NewAccessTokenWithIdentity(token IdentityToken) AccessToken {
+	buffer := token.ToBytes()
+	buffer = strconv.AppendInt(buffer, time.Now().Unix(), 10)
+	buffer = strconv.AppendInt(buffer, rand.Int63(), 10)
+
+	hash := sha256.Sum256(buffer)
+
+	return AccessToken{NewToken(hash[0:32])}
+}
+
+func NewAccessTokenFromBytes(bytes []byte) (AccessToken, error) {
+	var token AccessToken
+	var err error = nil
 
 	if len(bytes) == 32 {
-		token = IdentityToken{NewToken(bytes)}
+		token = AccessToken{NewToken(bytes)}
+	} else {
+		err = errors.New(newAccessErrorString)
 	}
 
-	return token, ok
+	return token, err
 }
 
-func AccessTokenFromBase32(str string) (AccessToken, bool) {
-	token := NewTokenFromBase32(str)
-	if token.Length() != 32 {
+func NewAccessTokenFromBase32(str string) (AccessToken, error) {
+	var accessToken AccessToken
+
+	token, err := NewTokenFromBase32(str)
+	if err == nil {
+		if token.Length() == 32 {
+			accessToken = AccessToken{token}
+		} else {
+			err = errors.New(newAccessErrorString)
+		}
 	}
+
+	return accessToken, err
 }

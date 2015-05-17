@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 func readJson(request *http.Request, object interface{}) error {
@@ -25,11 +26,53 @@ func writeJsonWithCode(writer http.ResponseWriter, object interface{}, code int)
 }
 
 func createAccessToken(writer http.ResponseWriter, request *http.Request) {
-	var object map[string]string
+	object, err := json.DecodeMap(request.Body)
+	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
+	} else if keyString, found := object["accesskey"]; found {
+		accessKey, _ := oxpit.NewIdentityTokenFromBase32(keyString)
 
-	if data, err := ioutil.ReadAll(request.Body); err == nil {
-		err = json.Unmarshal(data, &object)
+		if keyString, found = object["secretkey"]; found {
+			secretKey := keyString
+			// Let's assume authentication succeeds
+			//writer.WriteHeader(http.StatusForbidden)
+
+			accessToken, _ := oxpit.NewAccessTokenWithIdentity(accessKey)
+			tokenString := accessToken.ToBase32()
+
+			route := GetServiceContext().router.Get("token")
+			url, muxErr := route.URL("id-token", tokenString)
+			if err != nil {
+				writer.WriteHeader(http.StatusInternalServerError)
+			} else {
+				dtFormat := "2006-01-02T15:04:05-07:00"
+				now := time.Now().UTC()
+				later := now.AddDate(0, 0, 7)
+
+				lease := make(map[string]string)
+				lease["token"] = tokenString
+				lease["issued-to"] = accessKey.ToBase32()
+				lease["issued-when"] = now.Format(dtFormat)
+				lease["expires-when"] = later.Format(dtFormat)
+
+				writer.Header().Set("Location", url.String())
+				writeJsonWithCode(writer, lease, http.StatusCreated)
+			}
+		} else {
+			writer.WriteHeader(http.StatusBadRequest)
+		}
+	} else {
+		writer.WriteHeader(http.StatusBadRequest)
 	}
+}
+
+func retrieveAccessToken(writer http.ResponseWriter, request *http.Request) {
+	vars := mux.Vars(request)
+
+	lease := make(map[string]string)
+	lease["token"] = vars["id-token"]
+
+	writeJson(writer, lease)
 }
 
 func createUser(writer http.ResponseWriter, request *http.Request) {
@@ -39,7 +82,6 @@ func createUser(writer http.ResponseWriter, request *http.Request) {
 	url, err := route.URL("user-id", strconv.Itoa(user.Id))
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
-		//url, _ = url.Parse("http://localhost:8088/try/this")
 	} else {
 		writer.Header().Set("Location", url.String())
 		writeJsonWithCode(writer, user, http.StatusCreated)

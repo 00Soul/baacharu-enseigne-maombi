@@ -1,12 +1,8 @@
 package main
 
 import (
-	"fmt"
-	"github.com/00Soul/mappings/json"
-	"github.com/00Soul/oxpit"
 	"github.com/gorilla/mux"
 	"net/http"
-	"strconv"
 )
 
 type ServiceContext struct {
@@ -28,6 +24,9 @@ func setupRoutes() {
 
 	tokensRouter := context.router.Path("/api/tokens").Name("tokens").Subrouter()
 	tokensRouter.Methods("POST").HandlerFunc(createAccessToken)
+
+	tokenRouter := context.router.Path("/api/tokens/{id-token}").Name("token").Subrouter()
+	tokenRouter.Methods("GET").HandlerFunc(retrieveAccessToken)
 
 	usersRouter := context.router.Path("/api/users").Name("users").Subrouter()
 	usersRouter.Methods("POST").HandlerFunc(createUser)
