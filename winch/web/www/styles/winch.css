@@ -1,4 +1,71 @@
 
+body {
+    background-color: #ffffff;
+}
+
+.kb-board {
+    background-color: #ffffff;
+    border: #ddddff 5px solid;
+    height: 500px;
+    padding: 10px;
+}
+
+.kb-board::after {
+    clear: left;
+}
+
+.kb-column {
+    background-color: #aaffaa;
+    border-radius: 4px;
+    float: left;
+    height: 480px;
+    margin: auto 5px 10px;
+    min-width: 100px;
+    padding: 0 10px;
+
+    -webkit-box-shadow: 0 1px 1px rgba( 0, 0, 0, 0.05 );
+    box-shadow: 0 1px 1px rgba( 0, 0, 0, 0.05 );
+}
+
+.kb-title {
+    background-color: #428bca;
+    color: #ffffff;
+    margin: 5px;
+    padding: 5px;
+    text-align: center;
+}
+
+.kb-card {
+    /*background-image: url("/images/cards/App-Notes-icon.png");*/
+    background-image: url("/images/cards/Notes-icon-flat.png");
+    background-repeat: no-repeat;
+    background-size: contain;
+    cursor: move;
+    height: 32px;
+    margin: 5px auto;
+    text-align: center;
+    width: 32px;
+}
+
+.kb-card .kb-caption {
+    background-color: #ffffff;
+    border: #000000 1px dashed;
+    border-radius: 4px;
+    color: #000000;
+    left: 0px;
+    opacity: 0;
+    padding: 5px;
+    position: relative;
+    width: 100px;
+
+    /*-webkit-transition: opacity 2s;
+    transition: opacity 2s;*/
+}
+
+.kb-card:hover .kb-caption {
+    opacity: 1;
+}
+
 .slide-animation-container {
     position: relative;
 }

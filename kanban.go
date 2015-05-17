@@ -1,5 +1,26 @@
 package spi
 
+type IdentityToken struct {
+	Token
+}
+
+type AccessToken struct {
+	Token
+}
+
+type User struct {
+	Id IdentityToken
+}
+
+type Application struct {
+	Id IdentityToken
+}
+
+type Actor struct {
+	User *User
+	App  *Application
+}
+
 // The service provider interface (SPI)
 type AccountService interface {
 	NewUser() *User
@@ -33,19 +54,6 @@ type ServiceLocator interface {
 
 type ServiceProvider interface {
 	Services(actor Actor) *ServiceLocator
-}
-
-type User struct {
-	Id IdentityToken
-}
-
-type Application struct {
-	Id IdentityToken
-}
-
-type Actor struct {
-	User *User
-	App  *Application
 }
 
 func NewUser(provider ServiceProvider) {

@@ -26,6 +26,9 @@ func GetServiceContext() *ServiceContext {
 func setupRoutes() {
 	context := GetServiceContext()
 
+	tokensRouter := context.router.Path("/api/tokens").Name("tokens").Subrouter()
+	tokensRouter.Methods("POST").HandlerFunc(createAccessToken)
+
 	usersRouter := context.router.Path("/api/users").Name("users").Subrouter()
 	usersRouter.Methods("POST").HandlerFunc(createUser)
 	usersRouter.Methods("GET").HandlerFunc(listUsers)

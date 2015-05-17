@@ -10,23 +10,35 @@
         <link href="styles/winch.css" rel="stylesheet"/>
     </head>
     <body x-ng-cloak>
-        <div id="header">
-        </div>
+        <header>
+            <nav>
+                <a href="#winch/welcome">Home</a>
+                <a href="#winch/about">About</a>
+                <a href="#winch/register">Sign up</a>
+                <a href="#winch/login">Login</a>
+            </nav>
+        </header>
 
         <div class="slide-animation-container">
-            <div x-ng-view id="ng-view" class="slide-animation"></div>
+            <div x-ng-view class="slide-animation"></div>
         </div>
 
-        <div id="footer">
-        </div>
+        <footer>
+            <div>
+                <span>Powered by</span>
+                <img src="images/AngularJS-small.png">
+            </div>
+        </footer>
 
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular-route.min.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular-animate.min.js"></script>
 
-        <script src"app/winch.js"></script>
-        <script src"app/controllers/DefaultController.js"></script>
-        <script src"app/controllers/LoginController.js"></script>
-        <script src"app/controllers/BoardController.js"></script>
+        <script src="app/winch.js"></script>
+        <script src="app/controllers/default.js"></script>
+        <script src="app/controllers/login.js"></script>
+        <script src="app/controllers/registration.js"></script>
+        <script src="app/controllers/board.js"></script>
+
     </body>
 </html>

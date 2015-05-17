@@ -3,11 +3,12 @@
 //
 (function() {
     var app = angular.module('winch', [
-        'ngRoute'
+        'ngRoute',
+        'ngAnimate'
     ]);
 
     app.config(function($routeProvider, $locationProvider) {
-        var viewBase = '/views/'
+        var viewBase = '/app/views/'
 
         $routeProvider
         .when('/welcome', {
@@ -29,7 +30,8 @@
         .when('/board/:boardId', {
             templateUrl: viewBase + 'board.html',
             controller: 'BoardController'
-        });
+        })
+        .otherwise({redirectTo: '/welcome'});
 
         $locationProvider.hashPrefix('winch');
     });

@@ -9,20 +9,6 @@ import (
 	"strconv"
 )
 
-type ServiceContext struct {
-	router *mux.Router
-}
-
-var persistentServiceContext *ServiceContext
-
-func GetServiceContext() *ServiceContext {
-	if persistentServiceContext == nil {
-		persistentServiceContext = &ServiceContext{mux.NewRouter()}
-	}
-
-	return persistentServiceContext
-}
-
 func readJson(request *http.Request, object interface{}) error {
 	return json.DecodeWithContext(request.Body, object, jsonMappingContext)
 }
@@ -36,6 +22,14 @@ func writeJsonWithCode(writer http.ResponseWriter, object interface{}, code int)
 	writer.WriteHeader(code)
 
 	return json.EncodeWithContext(writer, object, jsonMappingContext)
+}
+
+func createAccessToken(writer http.ResponseWriter, request *http.Request) {
+	var object map[string]string
+
+	if data, err := ioutil.ReadAll(request.Body); err == nil {
+		err = json.Unmarshal(data, &object)
+	}
 }
 
 func createUser(writer http.ResponseWriter, request *http.Request) {
