@@ -1,0 +1,18 @@
+<div>
+    <div class="kb-title">
+        {{ board.title }} 
+    </div>
+    <div>
+        <div class="kb-column" x-ng-repeat="column in board.columns">
+            <div class="kb-title">{{ column.title }}</div>
+                <div x-ng-repeat="card in column.cards">
+                    <div class="card">
+                        <div class="caption">
+                        {{ card.title }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
